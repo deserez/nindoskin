@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nindō AI</title>
+
+<style>
+:root {
+  --bg:#0b0b0f;
+  --panel:#11111a;
+  --border:#1f1f2a;
+  --text:#eaeaf0;
+  --user:#8ab4ff;
+  --ai:#c792ea;
+  --accent:#6a5acd;
+}
+
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:system-ui;
+}
+
+#app {
+  display:flex;
+  flex-direction:column;
+  height:100vh;
+}
+
+.header {
+  padding:16px;
+  border-bottom:1px solid var(--border);
+  font-weight:bold;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+select {
+  background:var(--panel);
+  color:white;
+  border:1px solid var(--border);
+  padding:6px;
+}
+
+.chat {
+  flex:1;
+  overflow:auto;
+  padding:16px;
+}
+
+.msg {
+  margin-bottom:14px;
+  line-height:1.5;
+  white-space:pre-wrap;
+}
+
+.user { color:var(--user); }
+.ai { color:var(--ai); }
+
+.input {
+  display:flex;
+  border-top:1px solid var(--border);
+}
+
+input {
+  flex:1;
+  padding:14px;
+  background:var(--panel);
+  border:none;
+  color:white;
+}
+
+button {
+  background:var(--accent);
+  border:none;
+  padding:14px 20px;
+  color:white;
+  cursor:pointer;
+}
+
+button:hover {
+  filter:brightness(1.1);
+}
+</style>
+</head>
+
+<body>
+<div id="app">
+
+<div class="header">
+  <div>Nindō AI</div>
+  <select id="mode">
+    <option value="writing">Writing</option>
+    <option value="code">Code</option>
+    <option value="systems">Systems</option>
+    <option value="lore">Lore</option>
+  </select>
+</div>
+
+<div id="chat" class="chat"></div>
+
+<div class="input">
+  <input id="input" placeholder="Ask Nindō AI..." />
+  <button onclick="send()">Send</button>
+</div>
+
+</div>
+
+<script>
+async function send() {
+  const input = document.getElementById("input");
+  const chat = document.getElementById("chat");
+  const mode = document.getElementById("mode").value;
+
+  const val = input.value.trim();
+  if (!val) return;
+
+  chat.innerHTML += `<div class='msg user'>${val}</div>`;
+  input.value = "";
+
+  try {
+    const res = await fetch("/api/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: val, mode })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      chat.innerHTML += `<div class='msg ai'>Error: ${data.error}</div>`;
+      return;
+    }
+
+    chat.innerHTML += `<div class='msg ai'>${data.reply}</div>`;
+    chat.scrollTop = chat.scrollHeight;
+  } catch (err) {
+    chat.innerHTML += `<div class='msg ai'>Request failed.</div>`;
+  }
+}
+</script>
+
+</body>
+</html>
